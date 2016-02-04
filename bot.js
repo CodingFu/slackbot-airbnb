@@ -77,24 +77,32 @@ controller.on('rtm_close',function(bot) {
   // you may want to attempt to re-open
 });
 
-controller.hears('hello','direct_message',function(bot,message) {
-  bot.reply(message,'Hello!');
-});
+//main logic
+var urx = require('./lib/urx');
+var COUNT = 5;
 
-controller.hears('^stop','direct_message',function(bot,message) {
-  bot.reply(message,'Goodbye');
-  bot.rtm.close();
-});
+function airBnbReact(bot, message, keywords) {
+  urx.setApiKey("XuxoT370mZZQq86+dVrV7WuLk16nR0x6hC8dLvcew079lcCPXLQBnpsHQ9nhrv6NiVJLYAC+VHwsxRXNA8v/QQ==|GMi0uG4zDp0kGy3d7YfpS4N8CtOkO3lp");
+  urx.search(keywords, function(response) {
+    for(var i = 0; i < COUNT; ++i) {
+      (function(j) {
+      setTimeout(function() {
+        var searchResult = response.results[j];
+        var text = searchResult.entityData.url
+        bot.reply(message, text);
+      }, j * 10);
+      })(i);
+    }
+   }, function(req, errorMessage) {
+          // SEARCH FAILURE HANDLER
+          console.log(errorMessage);
+          // res.json({text: "oops, could not find it"});
+   });
+};
 
-controller.on('direct_message,mention,direct_mention',function(bot,message) {
-  bot.api.reactions.add({
-    timestamp: message.ts,
-    channel: message.channel,
-    name: 'robot_face',
-  },function(err) {
-    if (err) { console.log(err) }
-    bot.reply(message,'I heard you loud and clear boss.');
-  });
+controller.hears(['(.*)'],'direct_message,direct_mention,mention',function(bot, message) {
+  var keywords = message.match[0] + " domain:airbnb.com";
+  airBnbReact(bot, message, keywords)
 });
 
 controller.storage.teams.all(function(err,teams) {
